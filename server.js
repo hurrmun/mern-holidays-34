@@ -3,6 +3,7 @@ const { urlencoded } = require("express");
 const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
+const holidayController = require("./controllers/holidaysController");
 
 //* config
 require("dotenv").config();
@@ -28,10 +29,13 @@ app.use(express.static(path.join(__dirname, "./client/build")));
 app.use(express.json());
 app.use(urlencoded({ extended: false }));
 
+//* Middleware for routes
+app.use("/api/holidays", holidayController);
+
 //* routes
-app.use("/api/test", (req, res) => {
-  res.send("test route is working!");
-});
+// app.use("/api/test", (req, res) => {
+//   res.send("test route is working!");
+// });
 
 app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "./client/build", "index.html"));
