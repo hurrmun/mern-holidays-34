@@ -1,22 +1,41 @@
 import { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
 import axios from "axios";
+import { useQuery, useMutation, useQueryClient } from "react-query";
+
+const fetchHolidays = async () => {
+  return axios.get("/api/holidays");
+};
 
 const HolidayTable = () => {
-  const [holidays, setHolidays] = useState([]);
-  useEffect(() => {
-    const fetchHolidays = async () => {
-      const foundHolidays = await axios.get("/api/holidays");
-      //   console.log(foundHolidays);
-      setHolidays(foundHolidays?.data?.data);
-    };
-    fetchHolidays();
-  }, []);
+  const info = useQuery("allHolidays", fetchHolidays);
+  const holidays = info?.data?.data?.data ?? [];
 
-  const handleDelete = async (id) => {
-    await axios.delete(`/api/holidays/${id}`);
-    setHolidays(holidays.filter((holiday) => holiday._id !== id));
-  };
+  //   const [holidays, setHolidays] = useState([]);
+  //   useEffect(() => {
+  //     const fetchHolidays = async () => {
+  //       const foundHolidays = await axios.get("/api/holidays");
+  //       //   console.log(foundHolidays);
+  //       setHolidays(foundHolidays?.data?.data);
+  //     };
+  //     fetchHolidays();
+  //   }, []);
+  const queryClient = useQueryClient();
+  const mutation = useMutation(
+    (id) => {
+      return axios.delete(`/api/holidays/${id}`);
+    },
+    {
+      onSuccess: (data, variables, context) => {
+        queryClient.invalidateQueries("allHolidays");
+      },
+    }
+  );
+
+  //   const handleDelete = async (id) => {
+  //     await axios.delete(`/api/holidays/${id}`);
+  //     // setHolidays(holidays.filter((holiday) => holiday._id !== id));
+  //   };
 
   return (
     <div>
@@ -46,7 +65,9 @@ const HolidayTable = () => {
                   <NavLink to={`/holidays/${holiday._id}/edit`}>Edit</NavLink>
                 </td>
                 <td>
-                  <button onClick={() => handleDelete(holiday._id)}>X</button>
+                  <button onClick={() => mutation.mutate(holiday._id)}>
+                    X
+                  </button>
                 </td>
               </tr>
             );
